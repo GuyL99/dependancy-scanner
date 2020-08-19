@@ -2,6 +2,7 @@ use serde::{Serialize,Deserialize};
 use serde_json::Value;
 use futures::future::{BoxFuture, FutureExt};
 use futures::executor::block_on;
+use std::env;
 
 
 #[derive(Serialize,Deserialize,Clone,Debug)]
@@ -50,8 +51,16 @@ fn build_tree_for_deps(deps:Vec<Dep>,layer:u8){
 }
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
-    let package= "express";
-    let version = "latest";
+    let args: Vec<String> = env::args().collect();
+    if args.len()==0{
+        return Ok(());
+    }
+    let package = &args[0];
+    let version = if args.len()==1{
+        "latest"
+    }else{
+        &args[1]
+    };
     let mut deps = check_deps_for_package(package,version).await;
     for mut dep in &mut deps{
         let deps1 = check_deps(dep.clone()).await;
